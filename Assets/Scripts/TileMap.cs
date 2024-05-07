@@ -92,80 +92,93 @@ public class TileMap : MonoBehaviour
     }
     public float GeneratePathTo(int x, int y)
     {
-        _unit.SetCurrentPath(null); // Clear old path
+        float pathCost = 0f;
+        _unit.SetCurrentPath(null); //clear old path
 
-        if (!UnitCanEnterTile(x, y))
+        if(UnitCanEnterTile(x,y) == false)
         {
-            // Clicked on an impassable tile (e.g., mountain)
-            return Mathf.Infinity;
+            //clicked on mountain
+            return 999;
         }
-
+  
         Dictionary<Node, float> dist = new Dictionary<Node, float>();
         Dictionary<Node, Node> prev = new Dictionary<Node, Node>();
-        List<Node> unvisited = new List<Node>();
 
-        Node source = _graph[_unit.GetTileX, _unit.GetTileY];
-        Node target = _graph[x, y];
+        List<Node> unvisited = new List<Node>(); //list of nodes unchecked
+
+        Node source = _graph[_unit.GetTileX,_unit.GetTileY];
+        Node target = _graph[x,y];
 
         dist[source] = 0;
         prev[source] = null;
 
-        // Initialize distances to infinity and add nodes to unvisited list
-        foreach (Node v in _graph)
+        //initialize everything to have inf distance
+        foreach(Node v in _graph)
         {
-            if (v != source)
+            if(v != source)
             {
                 dist[v] = Mathf.Infinity;
                 prev[v] = null;
             }
             unvisited.Add(v);
         }
-
-        while (unvisited.Count > 0)
+        while(unvisited.Count > 0) //grab nodes with min distance
         {
-            // Get node with the minimum distance
-            Node u = unvisited.OrderBy(n => dist[n]).FirstOrDefault();
+            //u is unvisited node with the smallest distance.
+            Node u = null;
 
-            if (u == null || dist[u] == Mathf.Infinity)
+            foreach(Node possibleU in unvisited)
             {
-                break; // No valid path to target
+                if(u == null || dist[possibleU] < dist[u])
+                {
+                    u = possibleU;
+                }
+            }
+
+            if(u == target)
+            {
+                break; //exit while loop
             }
 
             unvisited.Remove(u);
 
-            foreach (Node v in u.edges)
+            foreach(Node v in u.edges)
             {
-                float alt = dist[u] + CostToEnterTile(v.x, v.y);
+                //float alt = dist[u] + u.DistanceTo(v);
+                float alt = dist[u] + CostToEnterTile(v.x,v.y);
                 if (alt < dist[v])
                 {
+                    pathCost = alt - 1f;
                     dist[v] = alt;
                     prev[v] = u;
                 }
             }
         }
 
-        // Calculate total movement cost to the target
-        float totalCost = dist.ContainsKey(target) ? dist[target] : Mathf.Infinity;
-
-        if (totalCost != Mathf.Infinity)
+        //if we get here, either we found shortest route to
+        // our target, or there is no route at ALL to our target.
+        if(prev[target] == null)
         {
-            // Construct the path based on prev dictionary
-            List<Node> currentPath = new List<Node>();
-            Node curr = target;
-            while (curr != null)
-            {
-                currentPath.Add(curr);
-                curr = prev[curr];
-            }
-            currentPath.Reverse();
+            return pathCost; //no route between target and source
+        }
+        List<Node> currentPath = new List<Node>();
 
-            // Set the current path for the unit
-            _unit.SetCurrentPath(currentPath);
+        Node curr = target;
+
+        while (curr != null) // step through prev chain and add it to the path
+        {
+            currentPath.Add(curr);
+            curr = prev[curr];
+            
         }
 
-        return totalCost;
-    }
+        //currentPath describes route from target to source
+        currentPath.Reverse();
 
+        
+        _unit.SetCurrentPath(currentPath);
+        return pathCost;
+    }
 
     private float CostToEnterTile(int x, int y)
     {
