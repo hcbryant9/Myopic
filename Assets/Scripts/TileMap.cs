@@ -11,6 +11,7 @@ public class TileMap : MonoBehaviour
     [SerializeField] TileType[] tileTypes; //tile information
     [SerializeField] private int _mapSizeX = 60;
     [SerializeField] private int _mapSizeY = 60;
+    [SerializeField] private int _tileScaleFactor = 4;
     enum TerrainType {Grass,Swamp,Mountain};
 
     private Node[,] _graph; //pathfinding graph
@@ -73,7 +74,7 @@ public class TileMap : MonoBehaviour
             {
                 TileType tt = tileTypes[(int)_tiles[x, y]];
 
-                GameObject go = Instantiate(tt.tileVisualPrefab, new Vector3(x, 0, y), Quaternion.identity);
+                GameObject go = Instantiate(tt.tileVisualPrefab, new Vector3(x*_tileScaleFactor, 0, y*_tileScaleFactor), Quaternion.identity);
                 ClickTile ct = go.GetComponent<ClickTile>();
                 ct.SetTiles(x, y);
                 ct.map = this;
@@ -83,7 +84,7 @@ public class TileMap : MonoBehaviour
 
     public Vector3 TileCoordToWorldCoord(int x, int y)
     {
-        return new Vector3(x, 0, y);
+        return new Vector3(x*_tileScaleFactor, 0, y*_tileScaleFactor);
     }
 
     public bool UnitCanEnterTile(int x, int y)
@@ -203,13 +204,21 @@ public class TileMap : MonoBehaviour
             }
         }
 
-        _tiles[4, 6] = TerrainType.Mountain;
-        _tiles[4, 7] = TerrainType.Mountain;
-        _tiles[4, 8] = TerrainType.Mountain;
-        _tiles[5, 7] = TerrainType.Swamp;
-        _tiles[5, 8] = TerrainType.Swamp;
-        _tiles[4, 5] = TerrainType.Swamp;
-        _tiles[4, 4] = TerrainType.Swamp;
+       
+    for (int y = 0; y < _mapSizeY/7; y++)
+        {
+            _tiles[4, y] = TerrainType.Mountain;
+            _tiles[5, y] = TerrainType.Mountain;
+        }
+        
+        
+        _tiles[5, 3] = TerrainType.Swamp;
+        _tiles[5, 4] = TerrainType.Swamp;
+        _tiles[5, 5] = TerrainType.Swamp;
         _tiles[4, 3] = TerrainType.Swamp;
+        _tiles[4, 4] = TerrainType.Swamp;
+        _tiles[4, 5] = TerrainType.Swamp;
+        _tiles[4, 6] = TerrainType.Swamp;
+        _tiles[4, 7] = TerrainType.Swamp;
     }
 }
